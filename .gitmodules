@@ -1,0 +1,12 @@
+[submodule "engine/extern/glfw"]
+	path = engine/extern/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "engine/extern/imgui"]
+	path = engine/extern/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "engine/extern/volk"]
+	path = engine/extern/volk
+	url = https://github.com/zeux/volk
+[submodule "engine/extern/VulkanMemoryAllocator"]
+	path = engine/extern/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
