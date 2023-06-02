@@ -20,3 +20,5 @@ add_subdirectory(volk)
 # VMA
 set(VMA_STATIC_VULKAN_FUNCTIONS OFF)
 add_subdirectory(VulkanMemoryAllocator)
+
+target_link_libraries(VulkanMemoryAllocator PRIVATE volk_headers)

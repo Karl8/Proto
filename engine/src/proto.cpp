@@ -7,12 +7,12 @@
 
 int main()
 {
-    LOG(LOG_INO, "Hello Proto!");
+    LOG(INFO, "Hello Proto!\n");
     
-    VulkanRenderer renderer;
-    renderer.initialize();
+    Renderer *renderer = new VulkanRenderer();
+    renderer->exec();
 
-    Editor protoEditor;
-    protoEditor.start();
+    // Editor protoEditor;
+    // protoEditor.start();
     return 0;
 }
