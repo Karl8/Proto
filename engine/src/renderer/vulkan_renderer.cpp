@@ -10,6 +10,46 @@
 
 #include <vulkan/vk_enum_string_helper.h>
 
+#include "VulkanDevice.h"
+#include "VulkanInstance.h"
+
+
+const std::vector<const char*> enabledLayers = {
+	"VK_LAYER_KHRONOS_validation"
+};
+
+const std::vector<const char*> instanceExtentions = {
+	VK_KHR_SURFACE_EXTENSION_NAME,
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+	VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#endif
+};
+
+
+VulkanRenderer::VulkanRenderer()
+{
+}
+
+VulkanRenderer::~VulkanRenderer()
+{
+}
+
+void VulkanRenderer::initialize()
+{
+	// initialize_legacy();
+
+
+	mInstance = std::make_unique<VulkanInstance>("proto demo", instanceExtentions, enabledLayers);
+
+	const VulkanPhysicalDevice& physicalDevice = mInstance->pickSuitablePhysicalDevice();
+
+	const std::vector<const char*> deviceExtensions{
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+
+	mDevice = std::make_unique<VulkanDevice>(physicalDevice, deviceExtensions);
+}
+
 VkInstance instance;
 
 VkPhysicalDevice physicalDevice;
@@ -91,15 +131,7 @@ VkSurfaceFormatKHR chooseSwapchainFormat()
 	return *surfaceFormatIt;
 }
 
-VulkanRenderer::VulkanRenderer()
-{
-}
-
-VulkanRenderer::~VulkanRenderer()
-{
-}
-
-void VulkanRenderer::initialize()
+void VulkanRenderer::initialize_legacy()
 {
 	/* Vulkan Instance */
 	VK_CHECK(volkInitialize());
@@ -145,7 +177,6 @@ void VulkanRenderer::initialize()
 	physicalDevice = physicalDevices[0];
 
 	/* Logical Device */
-
 	float queuePriorities[] = {1.0f};
 	uint32_t queueFamilyIndex = 0;
 
@@ -257,7 +288,7 @@ void VulkanRenderer::initialize()
 	VkAttachmentReference attachmentReference = {};
 	attachmentReference.attachment = 0;
 	attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	
+
 
 	VkSubpassDescription subpassDescription = {};
 	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -269,7 +300,7 @@ void VulkanRenderer::initialize()
 	subpassDescription.pDepthStencilAttachment = nullptr;
 	subpassDescription.preserveAttachmentCount = 0;
 	subpassDescription.pPreserveAttachments = nullptr;
-	
+
 	VkRenderPassCreateInfo renderPassCreateInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
 	renderPassCreateInfo.attachmentCount = 1;
 	renderPassCreateInfo.pAttachments = &attachmentDescription;
@@ -277,7 +308,7 @@ void VulkanRenderer::initialize()
 	renderPassCreateInfo.pSubpasses = &subpassDescription;
 	renderPassCreateInfo.dependencyCount = 0;
 	renderPassCreateInfo.pDependencies = nullptr;
-	
+
 	VK_CHECK(vkCreateRenderPass(device, &renderPassCreateInfo, nullptr, &renderPass));
 
 	for (auto& swapchainImageView : swapchainImageViews)
@@ -320,7 +351,7 @@ void VulkanRenderer::renderLoop()
 		commandBufferAllocateInfo.commandPool = commandPool;
 		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		commandBufferAllocateInfo.commandBufferCount = 1;
-		
+
 		vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer);
 
 		VkCommandBufferBeginInfo commandBufferBeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
@@ -333,7 +364,7 @@ void VulkanRenderer::renderLoop()
 		clearValue.color.float32[1] = 0.0f;
 		clearValue.color.float32[2] = 0.0f;
 		clearValue.color.float32[3] = 1.0f;
-		
+
 		// clearValue.depthStencil = {0.0f, 0};
 
 		VkRenderPassBeginInfo renderPassBeginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -360,7 +391,7 @@ void VulkanRenderer::renderLoop()
 		submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
 
 		vkResetFences(device, 1, &fence);
-		
+
 		vkQueueSubmit(queue, 1, &submitInfo, fence);
 
 		/* Present */
@@ -385,14 +416,14 @@ void VulkanRenderer::terminate()
 	}
 	swapchainImageViews.resize(0);
 
-	for (auto& frameBuffer: frameBuffers)
+	for (auto& frameBuffer : frameBuffers)
 	{
 		vkDestroyFramebuffer(device, frameBuffer, nullptr);
 	}
 	frameBuffers.resize(0);
-	
+
 	vkDestroySwapchainKHR(device, swapchain, nullptr);
-	
+
 	vkDestroyRenderPass(device, renderPass, nullptr);
 
 	vkDestroyCommandPool(device, commandPool, nullptr);

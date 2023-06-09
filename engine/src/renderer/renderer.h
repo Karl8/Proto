@@ -1,8 +1,10 @@
+#pragma once
+
 class Renderer
 {
 public:
     Renderer();
-    ~Renderer();
+    virtual ~Renderer() = default;
 
     virtual void initialize() = 0;
     virtual void renderLoop();
