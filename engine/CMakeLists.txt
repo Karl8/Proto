@@ -9,8 +9,8 @@ add_subdirectory(extern)
 
 target_link_libraries(proto
     PRIVATE
-        imgui
+        # imgui
         glfw
         volk
-        VulkanMemoryAllocator
+        # VulkanMemoryAllocator
 )

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
-#include <imgui.h>
+// #include <imgui.h>
 
 #include "editor.h"
 #include "common.h"
@@ -17,21 +17,21 @@ void Editor::start()
 {
     LOG(INFO, "Editor Start.");
 
-    if (!glfwInit())
-    {
-        LOG(ERROR, "glfwInit() failed.");
-        return;
-    }
+    // if (!glfwInit())
+    // {
+    //     LOG(ERROR, "glfwInit() failed.");
+    //     return;
+    // }
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 960, "proto_editor", 0, 0);
+    // GLFWwindow* window = glfwCreateWindow(1280, 960, "proto_editor", 0, 0);
 
-    ImGui::CreateContext();
+    // ImGui::CreateContext();
 
-    bool isWindowActive;
-    ImGui::NewFrame();
-    ImGui::Begin("proto_editor_imgui", &isWindowActive, 0);
+    // bool isWindowActive;
+    // ImGui::NewFrame();
+    // ImGui::Begin("proto_editor_imgui", &isWindowActive, 0);
      
 }
 

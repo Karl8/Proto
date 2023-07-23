@@ -19,6 +19,7 @@ public:
 
 private:
     void initialize_legacy();
+    void renderLoop_legacy();
 
     std::unique_ptr<VulkanInstance> mInstance;
 

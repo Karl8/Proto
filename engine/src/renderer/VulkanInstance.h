@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <vector>
-#include <volk.h>
 
 #include "common.h"
 #include "VulkanObject.h"
@@ -19,7 +18,7 @@ public:
 	
 	~VulkanInstance() override;
 
-	const std::vector<VulkanPhysicalDevice> getPhysicalDevices() const;
+	std::vector<VulkanPhysicalDevice> getPhysicalDevices() const;
 
 	const VulkanPhysicalDevice& pickSuitablePhysicalDevice() const;
 

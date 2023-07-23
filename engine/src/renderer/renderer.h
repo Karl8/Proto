@@ -3,7 +3,7 @@
 class Renderer
 {
 public:
-    Renderer();
+    Renderer() = default;
     virtual ~Renderer() = default;
 
     virtual void initialize() = 0;

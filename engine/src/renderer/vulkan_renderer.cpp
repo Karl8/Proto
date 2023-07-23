@@ -10,18 +10,26 @@
 
 #include <vulkan/vk_enum_string_helper.h>
 
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+#include "vulkan/vulkan_beta.h"
+#endif
+
 #include "VulkanDevice.h"
 #include "VulkanInstance.h"
 
 
 const std::vector<const char*> enabledLayers = {
-	"VK_LAYER_KHRONOS_validation"
+	"VK_LAYER_KHRONOS_validation",
+//    "VK_LAYER_LUNARG_api_dump"
 };
 
 const std::vector<const char*> instanceExtentions = {
 	VK_KHR_SURFACE_EXTENSION_NAME,
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 	VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#endif
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+    VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #endif
 };
 
@@ -44,7 +52,10 @@ void VulkanRenderer::initialize()
 	const VulkanPhysicalDevice& physicalDevice = mInstance->pickSuitablePhysicalDevice();
 
 	const std::vector<const char*> deviceExtensions{
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+        VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
+#endif
 	};
 
 	mDevice = std::make_unique<VulkanDevice>(physicalDevice, deviceExtensions);
@@ -333,8 +344,80 @@ void VulkanRenderer::initialize_legacy()
 	VK_CHECK(vkCreateCommandPool(device, &commandPoolCreateInfo, nullptr, &commandPool));
 }
 
+void VulkanRenderer::renderLoop() {
+    while (true)
+    {
+        /* Aquire next image */
+        uint32_t imageIndex;
+        VkResult result = vkAcquireNextImageKHR(mDevice->getHandle(), swapchain, UINT64_MAX, imageAvaliableSemephore, VK_NULL_HANDLE,
+                                                &imageIndex);
+        LOG(INFO, "imageIndex = %d\n", imageIndex);
+        assert(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR);
 
-void VulkanRenderer::renderLoop()
+        /* Draw */
+        VkCommandBuffer commandBuffer;
+        VkCommandBufferAllocateInfo commandBufferAllocateInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+        commandBufferAllocateInfo.commandPool = commandPool;
+        commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferAllocateInfo.commandBufferCount = 1;
+
+        vkAllocateCommandBuffers(mDevice->getHandle(), &commandBufferAllocateInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo commandBufferBeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+        commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        VK_CHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+        VkClearValue clearValue;
+        clearValue.color.float32[0] = 1.0f;
+        clearValue.color.float32[1] = 0.0f;
+        clearValue.color.float32[2] = 0.0f;
+        clearValue.color.float32[3] = 1.0f;
+
+        // clearValue.depthStencil = {0.0f, 0};
+
+        VkRenderPassBeginInfo renderPassBeginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+        renderPassBeginInfo.renderPass = renderPass;
+        renderPassBeginInfo.framebuffer = frameBuffers[imageIndex];
+        renderPassBeginInfo.renderArea.offset = {0, 0};
+        renderPassBeginInfo.renderArea.extent = {width, height};
+        renderPassBeginInfo.clearValueCount = 1;
+        renderPassBeginInfo.pClearValues = &clearValue;
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdEndRenderPass(commandBuffer);
+
+        vkEndCommandBuffer(commandBuffer);
+
+        /* Submit */
+
+        VkSubmitInfo submitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &imageAvaliableSemephore;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &renderFinishedSemaphore;
+
+        vkResetFences(mDevice->getHandle(), 1, &fence);
+
+        vkQueueSubmit(queue, 1, &submitInfo, fence);
+
+        /* Present */
+        VkPresentInfoKHR presentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = &swapchain;
+        presentInfo.pImageIndices = &imageIndex;
+
+        vkQueuePresentKHR(queue, &presentInfo);
+
+        vkDeviceWaitIdle(mDevice->getHandle());
+    }
+}
+
+void VulkanRenderer::renderLoop_legacy()
 {
 	while (true)
 	{

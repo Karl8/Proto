@@ -2,14 +2,16 @@
 
 #include <algorithm>
 #include <cassert>
-#include <volk.h>
+#include "vkcommon.h"
+
+static size_t objectCount = 0;	
 
 class VulkanDevice;
 
 template <typename THandle>
 class VulkanObject
 {
-	const size_t INVALID_ID = -1;
+	static const size_t INVALID_ID = -1;
 public:
 	VulkanObject(THandle mHandle = VK_NULL_HANDLE/*, VulkanDevice* mDevice = nullptr*/) :
 		mHandle{mHandle}/*, mDevice{mDevice}*/, mID{generateNewObjectId()}
@@ -57,8 +59,7 @@ protected:
 	size_t mID; // TODO: Generate ID automatically
 
 private:
-	static size_t objectCount = 0;
-	
+	// static size_t objectCount;	
 	inline static size_t generateNewObjectId()
 	{
 		return objectCount++;	

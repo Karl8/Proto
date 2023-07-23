@@ -13,7 +13,11 @@ VulkanInstance::VulkanInstance(const char* applicationName, const std::vector<co
 	applicationInfo.applicationVersion = 0;
 	applicationInfo.pEngineName = "Proto";
 	applicationInfo.engineVersion = 0;
-	applicationInfo.apiVersion = VK_VERSION_1_0;
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+    applicationInfo.apiVersion = VK_API_VERSION_1_1;
+#else
+	applicationInfo.apiVersion = VK_API_VERSION_1_0;
+#endif
 
 	// TODO: check extensions available
 	VkInstanceCreateInfo instanceCreateInfo{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
@@ -22,9 +26,13 @@ VulkanInstance::VulkanInstance(const char* applicationName, const std::vector<co
 	instanceCreateInfo.ppEnabledExtensionNames = instanceExtentions.data();
 	instanceCreateInfo.enabledLayerCount = enabledLayers.size();
 	instanceCreateInfo.ppEnabledLayerNames = enabledLayers.data();
+#ifdef VK_USE_PLATFORM_MACOS_MVK
+    instanceCreateInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
-	VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &mHandle));
-	
+//	VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &mHandle));
+    VkResult  result = vkCreateInstance(&instanceCreateInfo, nullptr, &mHandle);
+
 	volkLoadInstanceOnly(mHandle);
 
 	mPhysicalDevices = getPhysicalDevices();
@@ -37,7 +45,7 @@ VulkanInstance::~VulkanInstance()
 	vkDestroyInstance(mHandle, nullptr);
 }
 
-const std::vector<VulkanPhysicalDevice> VulkanInstance::getPhysicalDevices() const
+std::vector<VulkanPhysicalDevice> VulkanInstance::getPhysicalDevices() const
 {
 	uint32_t phycicalDeviceCount = 0;
 	VK_CHECK(vkEnumeratePhysicalDevices(mHandle, &phycicalDeviceCount, nullptr));
